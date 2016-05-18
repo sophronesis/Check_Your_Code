@@ -103,12 +103,13 @@
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(592, 12);
+            this.button3.Location = new System.Drawing.Point(266, 405);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(77, 23);
             this.button3.TabIndex = 7;
             this.button3.Text = "Згорнути";
             this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
             // openFileDialog1
             // 
@@ -155,6 +156,7 @@
             this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.button1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.Name = "Form2";
             this.Text = "Form2";
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
