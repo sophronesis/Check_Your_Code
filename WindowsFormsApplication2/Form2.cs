@@ -96,7 +96,7 @@ namespace WindowsFormsApplication2
 
         private void button3_Click(object sender, EventArgs e)
         {
-            if (!textEditorHidden)
+            if (!textEditorHidden) 
             {
                 richTextBox1.Hide();
                 label2.Hide();
