@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Net;
 using System.IO;
+using System.Text.RegularExpressions;
 using FastColoredTextBoxNS;
 
 
@@ -267,6 +268,45 @@ namespace CodeChecker
         private void MainWindow_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            if (openedFile != "")
+            {
+                Regex currRegex;
+                //bubble sort
+                if ((currRegex = new Regex(@"for.*?\(.*?\S+.*?([a-z_][a-z0-9_]*).*?;.+?\k<1>.*?<.*;.*?(\+\+)?\k<1>(\+\+)?\)", RegexOptions.IgnoreCase)).IsMatch(loadedCodeTextBox.Text))
+                {
+                    Match firstCheck = currRegex.Match(loadedCodeTextBox.Text);
+                    string i_var = firstCheck.Groups[1].ToString();
+                    if ((currRegex = new Regex(@"for.*?\(.*?\S+.*?([a-z_][a-z0-9_]*).+?;.*?\k<1>.*?<.*?" + i_var + @".*?;.*?(\+\+)?\k<1>(\+\+)?\)", RegexOptions.IgnoreCase)).IsMatch(loadedCodeTextBox.Text))
+                    {
+                        Match secondCheck = currRegex.Match(loadedCodeTextBox.Text);
+                        string j_var = secondCheck.Groups[1].ToString();
+                        if ((currRegex = new Regex(@"if \(.*?" + j_var + @".*?\)", RegexOptions.IgnoreCase)).IsMatch(loadedCodeTextBox.Text))
+                        {
+                            MessageBox.Show("Simple bubble sort.");
+                        }
+                    }
+                    else if ((currRegex = new Regex(@"for.*?\(\S+.*?([a-z_][a-z_0-9]*).*?\+1;.*?\k<1><.*?;.*?\k<1>\)", RegexOptions.IgnoreCase)).IsMatch(loadedCodeTextBox.Text))
+                    {
+                        Match secondCheck = currRegex.Match(loadedCodeTextBox.Text);
+                        string j_var = secondCheck.Groups[1].ToString();
+                        if ((currRegex = new Regex(@"if\S*\(.*?"+j_var+@".*?\)", RegexOptions.IgnoreCase)).IsMatch(loadedCodeTextBox.Text))
+                        {
+                            MessageBox.Show("Simple bubble sort.");
+                        }
+                    }
+
+                }
+                //hello world
+                else if (new Regex(@"cout\s*<<.*?Hello.*?World", RegexOptions.IgnoreCase).IsMatch(loadedCodeTextBox.Text) ||
+                         new Regex(@"printf\(.*?Hello.*?world.*?\)",RegexOptions.IgnoreCase).IsMatch(loadedCodeTextBox.Text))
+                        MessageBox.Show("Simple \"Hello world\"");
+            }
+            else
+                MessageBox.Show("File not selected.");
         }
     
     }
