@@ -1,0 +1,492 @@
+//Rextester.Program.Main is the entry point for your code. Don't change it.
+//Compiler version 4.0.30319.17929 for Microsoft (R) .NET Framework 4.5
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Text;
+using System.Windows.Forms;
+namespace ATSNew1
+{
+public class Form1 : Form
+{
+string ConstPath = @"E:\Final ATS C#\WebATES";
+private int pvMenu;
+private int Loop1;
+private int TCount;
+private int pageSHow;
+bool Process = false;
+public Form1()
+{
+InitializeComponent();
+}
+private void Form1_Load(object sender, EventArgs e)
+{
+SpeakWords.Visible = false;
+VoiceCmd.Visible = false;
+this.LoadFrom();
+pageSHow = 0;
+this.ResetUI();
+this.GuideCustomer("Wel come To Automated Transport Enquiry System.... Select The Option Listed Bellow.... ");
+}
+private void LoadFrom()
+{
+// Initialize the voice control...
+VoiceCmd.Initialized = 1;
+// Create and return a Menu control
+pvMenu = VoiceCmd.get_MenuCreate("ATSEn", "Home", 4);
+// Enable our voice control
+VoiceCmd.CtlEnabled = 1;
+// Suppress any voice errors that may occur
+//VoiceCmd.SuppressExceptions = 1
+// Load our list of commands into the menu.
+lbMenu.Items.Clear();
+TCount = VoiceCmd.get_CountCommands(pvMenu);
+if (TCount > 0) 
+{
+for (Loop1 = TCount; Loop1 >= 1; Loop1 += -1)
+{
+VoiceCmd.Remove(pvMenu, Loop1);
+}
+}
+VoiceCmd.AddCommand(pvMenu, 4, "Next", "Next", "Wel-come list", 0, "");
+VoiceCmd.AddCommand(pvMenu, 5, "Back", "Back", "Wel-come list", 0, "");
+VoiceCmd.AddCommand(pvMenu, 6, "Exit", "Exit", "Wel-come list", 0, "");
+VoiceCmd.AddCommand(pvMenu, 8, "Change Option", "Option", "Wel-come list", 0, "");
+VoiceCmd.AddCommand(pvMenu, 7, "From To", "From To", "Wel-come list", 0, "");
+lbMenu.Items.Add("From To");
+this.AddCommandToVoiceControl();
+VoiceCmd.Activate(pvMenu);
+}
+DataManager dm = new DataManager();
+private void AddCommandToVoiceControl()
+{
+DataSet dsP = dm.getPlaceList();
+lbPlacelist.DataSource = dsP.Tables[0];
+lbPlacelist.DisplayMember = "Place";
+lbPlacelist.ValueMember = "Place";
+int i = 9;
+foreach (DataRow dr1 in dsP.Tables[0].Rows)
+{
+VoiceCmd.AddCommand(pvMenu, i, dr1["Place"].ToString(), "Place", "Palce list", 0, "");
+i++;
+}
+DataSet dsBusType = dm.GetBusType();
+lbBusType.DataSource = dsBusType.Tables[0];
+lbBusType.DisplayMember = "Name";
+lbBusType.ValueMember = "Name";
+foreach (DataRow dr2 in dsBusType.Tables[0].Rows)
+{
+// Add Command to Menu1 
+VoiceCmd.AddCommand(pvMenu, i, dr2["Name"].ToString(), "BusType", "BusTypelistenlist", 0, "");
+i++;
+}
+DataSet dsBusList = dm.getBusList();
+foreach (DataRow dr3 in dsBusList.Tables[0].Rows)
+{
+// Add Command to Menu1 
+VoiceCmd.AddCommand(pvMenu, i, dr3["Number"].ToString(), "BusList", "BusListlistenlist", 0, "");
+i++;
+}
+} 
+private void GuideCustomer(string prmString)
+{
+SpeakWords.AudioReset();
+SpeakWords.Speak(prmString);
+}
+private void VoiceCmd_CommandRecognize(object sender, AxHSRLib._VcommandEvents_CommandRecognizeEvent e)
+{
+RecogVoice(e.command.ToString());
+}
+private string pvPreviousCmd;
+private void RecogVoice(string prmCommand)
+{
+// Process = true;
+if (pvPreviousCmd == prmCommand)
+{
+// return;
+}
+pvPreviousCmd = prmCommand;
+this.Text = prmCommand;
+if (prmCommand != "")
+{
+switch (prmCommand)
+{
+case "Next":
+lblNext.ForeColor = Color.Maroon;
+lblBack.ForeColor = Color.Blue;
+lblChangeOption.ForeColor = Color.Blue;
+NextCommand();
+break;
+case "Back":
+lblNext.ForeColor = Color.Blue;
+lblChangeOption.ForeColor = Color.Blue;
+lblBack.ForeColor = Color.Maroon;
+BackCommand();
+break;
+case "Change Option":
+lblNext.ForeColor = Color.Blue;
+lblBack.ForeColor = Color.Blue;
+lblChangeOption.ForeColor = Color.Maroon;
+ChangeOptionCommand();
+break; 
+case "Exit":
+ExitCommand();
+break;
+case "From To":
+lblNext.ForeColor = Color.Blue;
+lblBack.ForeColor = Color.Blue;
+lblChangeOption.ForeColor = Color.Blue;
+FromToCommand();
+break;
+default:
+lblNext.ForeColor = Color.Blue;
+lblBack.ForeColor = Color.Blue;
+lblChangeOption.ForeColor = Color.Blue;
+if (panelPlacelist.Visible == true)
+{
+if (PlaceSelected == false)
+{
+this.ChoosePlace(prmCommand);
+}
+else
+{
+this.GuideCustomer("You have already Selected place... To Change Option say, Change option....");
+lblChangeOption.Text = "Already Selected place...";
+}
+}
+if (panelBusType.Visible == true)
+{
+if (BusTypeSelected == false)
+{
+this.ChooseBusType(prmCommand);
+}
+else
+{
+this.GuideCustomer("You have already Selected Bus Type... To Change Option say, Change option....");
+lblChangeOption.Text = "Already Selected Bus Type...";
+}
+}
+if (panelBusList.Visible == true)
+{
+if (BusSelected == false)
+{
+this.ChooseBus(prmCommand);
+System.Threading.Thread.Sleep(500);
+}
+else 
+{
+this.GuideCustomer("You have already Selected Bus... To Change Option say, Change option....");
+lblChangeOption.Text = "Already Selected Bus...";
+}
+}
+break;
+}
+bool PlaceSelected = false;
+private void ChoosePlace(string Place)
+{
+this.GuideCustomer("You Have Choosen " + Place + ", To Continue Say Next...");
+lblChangeOption.Text = Place;
+PlaceSelected = true;
+lbPlacelist.SelectedValue = Place;
+dm.ToPlace = Place;
+string s1 = ATES.DisplayPlaceImage(Place);
+pbPlacePic.ImageLocation = ConstPath + s1;
+if ((!string.IsNullOrEmpty(dm.ToPlace)) && 
+(!string.IsNullOrEmpty(dm.BusType))) 
+{
+//bus this.getBusResult();
+this.GetResultBus();
+}
+}
+bool BusTypeSelected = false;
+DataSet dsBuses;
+private void ChooseBusType(string PrmBusType)
+{
+if (dsBuses != null)
+{
+dsBuses.Clear();
+}
+this.GuideCustomer("You Have Choosen " + PrmBusType + "To Continue Say Next");
+BusTypeSelected = true;
+lblChangeOption.Text = PrmBusType;
+lbBusType.SelectedValue = PrmBusType;
+dm.BusType = PrmBusType;
+string s2 = ATES.DisplayBusTypeImage(PrmBusType);
+pbBusTypePic.ImageLocation = ConstPath + s2; 
+if ((!string.IsNullOrEmpty(dm.ToPlace)) && 
+(!string.IsNullOrEmpty(dm.BusType)))
+{
+// bus this.getBusResult();
+this.GetResultBus();
+}
+//this.getBusResult();
+}
+private void getBusResult()
+{
+dsBuses = dm.GetResult();
+gvBusList.DataSource = dsBuses.Tables[0];
+}
+localhost.ATESWebServiceManager ATES = new
+ATSNew1.localhost.ATESWebServiceManager();
+private void GetResultBus()
+{
+string dt = DateTime.Now.ToString("HH.mm");
+string day1 = DateTime.Now.DayOfWeek.ToString();
+double dt1 = Convert.ToDouble(dt);
+try
+{
+dsBuses = ATES.GetResult("Bangalore", dm.ToPlace, day1, dt1.ToString(),dm.BusType);
+if (dsBuses.Tables.Count > 0) 
+gvBusList.DataSource = dsBuses.Tables[0];
+}
+catch (Exception ex)
+{
+MessageBox.Show(ex.ToString());
+}
+}
+private void ChangeOptionCommand()
+{
+if (panelPlacelist.Visible == true)
+{
+if (PlaceSelected == true)
+{
+PlaceSelected = false;
+this.GuideCustomer("Choose Place From The List Bellow...");
+dm.ToPlace = null;
+lblChangeOption.Text = "Choose Option";
+pbPlacePic.ImageLocation = "";
+dm.BusSelected = null;
+this.BusSelected = false;
+BusTypeSelected = false;
+//this.ChoosePlace(prmCommand); 
+}
+}
+if (panelBusType.Visible == true)
+{
+if (BusTypeSelected == true)
+{
+BusTypeSelected = false;
+this.GuideCustomer("Choose Bus Type From The List Bellow...");
+lblChangeOption.Text = "Choose Option";
+pbBusTypePic.ImageLocation = "";
+dm.BusType = null;
+dm.BusSelected = null;
+// change BusTypeSelected = false;
+this.BusSelected = false;
+//this.ChooseBusType(prmCommand);
+}
+else
+{
+this.GuideCustomer("You have Not Selected Option..");
+}
+}
+if (panelBusList.Visible == true)
+{
+if (BusSelected == true)
+{
+BusSelected = false;
+this.GuideCustomer("Choose Bus Number From The List Bellow...");
+lblChangeOption.Text = "Choose Option";
+dm.BusSelected = null;
+//change BusTypeSelected = false;
+//this.ChooseBus(prmCommand);
+}
+else
+{
+this.GuideCustomer("You have Not Selected Option..");
+}
+}
+}
+bool BusSelected = false;
+private void ChooseBus(string PrmBus)
+{
+this.GuideCustomer("You Have Choosen " + PrmBus + "To Continue Say Next");
+lblChangeOption.Text = PrmBus;
+BusSelected = true;
+dm.BusSelected = PrmBus; 
+}
+private void GetBusDetails()
+{
+DataRow dr = dm.GetBusDetails(dsBuses);
+if (dr != null)
+{
+lblBusNo.Text = dr["BusNumber"].ToString();
+lblBusType.Text = dr["BusType"].ToString();
+lblFrom.Text = dr["FromPlace"].ToString();
+lblTo.Text = dr["ToPlace"].ToString();
+lblTime.Text = dr["Time"].ToString();
+lblAvailableseats.Text = dr["AvailableSeats"].ToString();
+lblTotalseats.Text = dr["TotalSeats"].ToString();
+lblPlatformName.Text = dr["PlatformName"].ToString();
+lblPlatformNo.Text = dr["PlatformNumber"].ToString();
+pictureBoxBusType.ImageLocation = ConstPath + dr["BusTypeImage"].ToString();
+pictureBox1.ImageLocation = ConstPath + dr["RootMap"].ToString();
+pictureBoxPlatformImage.ImageLocation =ConstPath + 
+dr["PlatformImage"].ToString();
+lblVia.Text = dr["Via"].ToString();
+this.GuideCustomer("Avalibility Of Seats for The Bus Number,"+ lblBusNo.Text +  "From ," + lblFrom.Text +  "To ,"  + lblTo.Text + "Is "+ lblAvailableseats.Text + "Thank You Happy Journey");
+}
+}
+private void ResetUI()
+{
+switch (pageSHow)
+{
+case 0:
+panelFromTo.Visible = true;
+panelPlacelist.Visible = false;
+panelBusType.Visible = false;
+panelBusList.Visible = false;
+panelBusdetails.Visible = false;
+break;
+case 1:
+if (PlaceSelected == false)
+{
+this.GuideCustomer("Select Place From The List Bellow....");
+}
+panelFromTo.Visible = false;
+panelPlacelist.Visible = true;
+panelBusType.Visible = false;
+panelBusList.Visible = false; 
+panelBusdetails.Visible = false;
+break;
+case 2:
+if (BusTypeSelected == false)
+{
+this.GuideCustomer("Select Bus Type From The List Bellow....");
+}
+panelFromTo.Visible = false;
+panelPlacelist.Visible = false;
+panelBusType.Visible = true;
+panelBusList.Visible = false;
+panelBusdetails.Visible = false;
+break;
+case 3:
+if (BusSelected == false)
+{
+this.GuideCustomer("Select Bus Number From The List Bellow....");
+}
+panelFromTo.Visible = false;
+panelPlacelist.Visible = false;
+panelBusType.Visible = false;
+panelBusList.Visible = true;
+panelBusdetails.Visible = false;
+break;
+case 4:
+panelFromTo.Visible = false;
+panelPlacelist.Visible = false;
+panelBusType.Visible = false;
+panelBusList.Visible = false;
+panelBusdetails.Visible = true;
+break;
+default:
+break;
+}
+}
+private void BackCommand()
+{
+if ((pageSHow < 5) && (pageSHow > 0))
+{
+pageSHow -= 1;
+ResetUI();
+}
+}
+private void NextCommand()
+{
+if (this.CheckConditions() == true)
+{
+if (pageSHow < 4)
+{
+pageSHow += 1;
+ResetUI();
+}
+else
+{ 
+//pageSHow += 1;
+}
+} 
+}
+private bool CheckConditions()
+{
+bool Assigned = false;
+switch (pageSHow)
+{
+case 0 :
+Assigned = true;
+break;
+case 1:
+if (!string.IsNullOrEmpty(dm.ToPlace))
+{
+Assigned = true;
+}
+else
+{
+this.GuideCustomer("Select Place First....");
+}
+break;
+case 2:
+if (!string.IsNullOrEmpty(dm.BusType))
+{
+Assigned = true;
+}
+else
+{
+this.GuideCustomer("Select Bus Type, Then Continue ....");
+}
+break;
+case 3:
+if (!string.IsNullOrEmpty(dm.BusSelected))
+{
+Assigned = true;
+}
+else
+{
+this.GuideCustomer("Select Bus Number, Then Continue....");
+}
+break;
+case 4:
+Assigned = true;
+break; 
+}
+return Assigned;
+}
+private void ExitCommand()
+{
+Application.Exit(); 
+}
+private void FromToCommand()
+{
+if (panelFromTo.Visible == true)
+{
+this.GuideCustomer("You Have Selected Form To Option.... To Continue Say Next");
+}
+}
+private void VoiceCmd_CommandOther(object sender, AxHSRLib._VcommandEvents_CommandOtherEvent e)
+{
+if (Process == true)
+{
+return;
+}
+RecogVoice(e.command.ToString());
+}
+private void panelBusdetails_VisibleChanged(object sender, EventArgs
+e)
+{
+if (panelBusdetails.Visible == true)
+{
+if ((BusSelected == true) && (dsBuses != null) && 
+(dsBuses.Tables[0].Rows.Count > 0))
+{
+// VoiceCmd.Deactivate(pvMenu);
+GetBusDetails();
+}
+else
+{
+this.GuideCustomer("NO Result Found... Try Again");
+}
+}
+} 
+}
+}
